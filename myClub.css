@@ -51,6 +51,7 @@ a{
     height: 100vh;
     padding: 60px 9% 0;
     color: white;
+    position: relative;
 
 }
 .home-info{
@@ -113,4 +114,56 @@ a{
     height: auto;
     object-fit: cover;
     mix-blend-mode: lighten;
+}
+
+.sci{
+    display: flex;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 10px;
+    position: absolute;
+    bottom: 20px;
+}
+.sci a{
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid rgb(48, 152, 237);
+    border-radius: 50%;
+    color: white;
+}
+.sci a:hover{
+    background-color: rgb(48, 152, 237);
+
+}
+.stats-bar{
+            background: rgba(124,240,61,0.06);
+            border-top: 1px solid rgba(124,240,61,0.15);
+            border-bottom: 1px solid rgba(124,240,61,0.15);
+            padding: 30px 9%;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+}
+        .stat-item {
+            text-align: center;
+        }
+
+.stat-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(to right, white, #3098ed);
+    background-clip: text;
+    color: transparent;
+    display: block;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: bold;
+    color: white;
 }

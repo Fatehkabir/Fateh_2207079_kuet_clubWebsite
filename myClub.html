@@ -8,68 +8,278 @@
     <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
 </head>
 <body>
+
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
     
-    <div class="navbar">
-        <a href="#" class="logo">HACK</a>
+    <nav class="navbar">
+        <a href="#" class="logo">HACK<span class="dot">.</span></a>
         <ul>
             <li class="active"><a href="#">HOME</a></li>
-            <li><a href="#">ABOUT</a></li>
-            <li><a href="#">EVENTS</a></li>
-            <li><a href="#">TEAM</a></li>
-            <li><a href="#">CONTACT</a></li>
+            <li><a href="#about">ABOUT</a></li>
+            <li><a href="#activities">ACTIVITIES</a></li>
+            <li><a href="#events">EVENTS</a></li>
+            <li><a href="#team">TEAM</a></li>
+            <li><a href="#contact">CONTACT</a></li>
         </ul>
-    </div>
+    </nav>
 
-    <br>
-    <div class="home">
+
+    <header class="home" id="home">
         <div class="home-info">
-            <h1>A hardware based club</h1>
-            <br>
-            <h2>Embrace your hardware skill with us.</h2>
-            <p>Hack is a hardware related club of KUET. we are here to embrace 
-                your hardware knowledge to the best.
-            </p>
-        </div>
-        <div class="home-img">
-            <div class="img-box">
-                <div class="img-item">
-                    <img src="hack.png" alt="hack" height="325" width="300">
-                </div>
-            </div>
-        </div>
-
+            <div class="badge">Innovation Lab</div>
+            <h1>Hardware <br> Engineering <br> <span class="text-gradient">Unleashed</span></h1>
+            <h2>Embrace your hardware skills with us.</h2>
+            <p>HACK is the premier hardware and robotics club of KUET. We are here to push the boundaries of embedded systems, automation, and creative technology.</p>
+       
             <div class="sci">
                 <a href="https://www.facebook.com/groups/172448752788508" class="facebook"><i class="bx bxl-facebook"></i></a>
                 <a href="#" class="twitter"><i class="bx bxl-linkedin"></i></a>
                 <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+                <a href="#" class="github"><i class="bx bxl-github"></i></a>            
+            </div>
+        </div>
+        <div class="home-img">
+            <div class="img-box-wrapper">
+                <div class="img-box">
+                    <div class="img-item">
+                       <img src="hack.png" alt="hack club logo">
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        </header>
+
+
+        <section class="stats-section">
+            <div class="stats-bar glass-panel">
+                <div class="stat-item">
+                    <span class="stat-num">300+</span>
+                    <div class="stat-label">Active Members</div>
+                </div>
+                <div class="stat-item">
+                <span class="stat-num">45+</span>
+                <div class="stat-label">Projects Built</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">20+</span>
+                <div class="stat-label">Awards Won</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">50+</span>
+                <div class="stat-label">Workshops Held</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num">10+</span>
+                <div class="stat-label">Years Active</div>
+            </div>
+            </div>
+        </section>
+
+    
+    <section class="about" id="about">
+        <div class="section-header">
+             <div class="section-subtitle">About Us</div>
+            <h2>Where engineers <span class="text-gradient">build real things</span></h2>
+            <p class="section-desc">HACK — Hardware, Automation & Creative Knowledge — is KUET's dedicated club for students who love getting their hands dirty. We believe the best engineering is built, not just studied.</p>
+        </div>
+           <div class="about-pillars">
+            <div class="pillar glass-card">
+                <div class="pillar-icon">⚡</div>
+                <div class="pillar-title">Build</div>
+                <div class="pillar-text">Hands-on robotics, PCB design, and embedded system projects every semester.</div>
+            </div>
+            <div class="pillar glass-card">
+                <div class="pillar-icon">🧠</div>
+                <div class="pillar-title">Learn</div>
+                <div class="pillar-text">Workshops on Arduino, ESP32, Raspberry Pi, and more — for all skill levels.</div>
+            </div>
+            <div class="pillar glass-card">
+                <div class="pillar-icon">🏆</div>
+                <div class="pillar-title">Compete</div>
+                <div class="pillar-text">Represent KUET in national robotics and hardware competitions across Bangladesh.</div>
+            </div>
+            <div class="pillar glass-card">
+                <div class="pillar-icon">🤝</div>
+                <div class="pillar-title">Connect</div>
+                <div class="pillar-text">Network with alumni, industry professionals, and fellow makers in our community.</div>
+            </div>
+        </div>
+    </section>
+
+
+        <section id="activities" class="activities">
+    <div class="section-header">
+        <div class="section-subtitle">What We Do</div>
+        <h2 class="section-title">Core <span class="text-gradient">Activities</span></h2>
+        <p class="section-desc">Six focus areas that shape every HACK member into a well-rounded hardware engineer.</p>
+    </div>
+
+    <div class="act-grid">
+        <div class="act-card glass-card">
+            <span class="act-icon">🤖</span>
+            <div class="act-title">Robotics</div>
+            <p class="act-desc">Design, build, and program autonomous robots for competitions and research — from line-followers to soccer bots.</p>
+        </div>
+        <div class="act-card glass-card">
+            <span class="act-icon">🔌</span>
+            <div class="act-title">Embedded Systems</div>
+            <p class="act-desc">Microcontroller programming with Arduino, STM32, and PIC — from basic I/O to complex real-time applications.</p>
+        </div>
+        <div class="act-card glass-card">
+            <span class="act-icon">📡</span>
+            <div class="act-title">IoT & Wireless</div>
+            <p class="act-desc">Build connected devices using ESP8266, ESP32, and LoRa for smart home, agriculture, and industrial automation.</p>
+        </div>
+        <div class="act-card glass-card">
+            <span class="act-icon">🛠️</span>
+            <div class="act-title">PCB Design</div>
+            <p class="act-desc">Learn KiCad and EagleCAD, etch your own boards, and manufacture custom PCBs for real-world deployment.</p>
+        </div>
+        <div class="act-card glass-card">
+            <span class="act-icon">⚙️</span>
+            <div class="act-title">Power Electronics</div>
+            <p class="act-desc">Motor drivers, inverters, and switching regulators — practical power electronics for engineering challenges.</p>
+        </div>
+        <div class="act-card glass-card">
+            <span class="act-icon">🖨️</span>
+            <div class="act-title">3D Printing & Fab</div>
+            <p class="act-desc">Prototype enclosures and mechanical parts using the club's 3D printers and fabrication tools.</p>
+        </div>
+    </div>
+</section>
+
+<section class="events" id="events">
+    <div class="section-header">
+        <div class="section-subtitle">What's Next</div>
+        <h2 class="section-title">Upcoming <span class="text-gradient">Events</span></h2>
+    </div>
+    <div class="events-grid">
+        <div class="event-card glass-card">
+            <div class="event-date">
+                <span class="month">OCT</span>
+                <span class="day">15</span>
+            </div>
+            <div class="event-info">
+                <h3>Intro to ESP32</h3>
+                <p>Learn IoT basics and connect your first device to the internet. Open for freshers.</p>
+            </div>
+            <a href="#" class="event-btn"><i class='bx bx-right-arrow-alt'></i></a>
+        </div>
+        <div class="event-card glass-card">
+          <div class="event-date">
+            <span class="month">NOV</span>
+            <span class="day">05</span>
+          </div>
+          <div class="event-info">
+            <h3>Robo-Soccer Intra-KUET</h3>
+            <p>Build and battle your own remote-controlled robot. Cash prizes available!</p>
+          </div>
+          <a href="#" class="event-btn"><i class='bx bx-right-arrow-alt'></i></a>
+        </div>
+        <div class="event-card glass-card">
+                <div class="event-date">
+                    <span class="month">Dec</span>
+                    <span class="day">12</span>
+                </div>
+                <div class="event-info">
+                    <h3>PCB Design Masterclass</h3>
+                    <p>From schematic to fabricated board using KiCad. Limited seats.</p>
+                </div>
+                <a href="#" class="event-btn"><i class='bx bx-right-arrow-alt'></i></a>
             </div>
     </div>
+</section>
 
-    <div class="stats-bar">
-        <div class="stats-item">
-            <span class="stat-num">300+</span>
-            <div class="stat-label">members</div>
+ <section class="team" id="team">
+        <div class="section-header">
+            <div class="section-subtitle">Meet The Makers</div>
+            <h2 class="section-title">Our <span class="text-gradient">Team</span></h2>
         </div>
-            <div class="stat-item">
-        <span class="stat-num">45+</span>
-        <div class="stat-label">Projects Built</div>
-    </div>
-    <div class="stat-item">
-        <span class="stat-num">20+</span>
-        <div class="stat-label">Awards Won</div>
-    </div>
-    <div class="stat-item">
-        <span class="stat-num">50+</span>
-        <div class="stat-label">Workshops Held</div>
-    </div>
-    <div class="stat-item">
-        <span class="stat-num">10+</span>
-        <div class="stat-label">Years Active</div>
-    </div>
+        <div class="team-grid">
+            <div class="team-member glass-card">
+                <div class="member-img-placeholder glow-ring">👨‍💻</div>
+                <h3>Rakib Hasan</h3>
+                <p class="role">President</p>
+                <div class="member-socials">
+                    <a href="#"><i class="bx bxl-linkedin"></i></a>
+                    <a href="#"><i class="bx bxl-github"></i></a>
+                </div>
+            </div>
+            <div class="team-member glass-card">
+                <div class="member-img-placeholder glow-ring">👩‍🔧</div>
+                <h3>Sadia Rahman</h3>
+                <p class="role">Hardware Lead</p>
+                <div class="member-socials">
+                    <a href="#"><i class="bx bxl-linkedin"></i></a>
+                    <a href="#"><i class="bx bxl-github"></i></a>
+                </div>
+            </div>
+            <div class="team-member glass-card">
+                <div class="member-img-placeholder glow-ring">👨‍🔧</div>
+                <h3>Arif Hossain</h3>
+                <p class="role">IoT Coordinator</p>
+                <div class="member-socials">
+                    <a href="#"><i class="bx bxl-linkedin"></i></a>
+                    <a href="#"><i class="bx bxl-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    </div>
+    <section class="contact" id="contact">
+        <div class="section-header">
+            <div class="section-subtitle">Get In Touch</div>
+            <h2 class="section-title">Contact <span class="text-gradient">Us</span></h2>
+        </div>
+        <div class="contact-container">
+            <div class="contact-info glass-card">
+                <h3>Join the community!</h3>
+                <p>Have an idea for a project? Want to collaborate? Or just want to say hi? Drop us a message.</p>
+                <ul>
+                    <li>
+                        <div class="icon-box"><i class='bx bx-map'></i></div>
+                        <span>Academic Building, KUET, Khulna</span>
+                    </li>
+                    <li>
+                        <div class="icon-box"><i class='bx bx-envelope' ></i></div>
+                        <span>contact@hack.kuet.ac.bd</span>
+                    </li>
+                    <li>
+                        <div class="icon-box"><i class='bx bx-phone' ></i></div>
+                        <span>+880 1234-567890</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="contact-form-container glass-card">
+                <form action="contact.php" method="POST" class="contact-form">
+                    <div class="input-box">
+                        <input type="text" name="name" placeholder="Your Name" required>
+                    </div>
+                    <div class="input-box">
+                        <input type="email" name="email" placeholder="Your Email" required>
+                    </div>
+                    <div class="input-box">
+                        <textarea name="message" cols="30" rows="5" placeholder="Your Message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <span>Send Message</span>
+                        <i class='bx bx-send'></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
 
-
+    <footer class="footer">
+        <div class="footer-text">
+            <p>Copyright &copy; 2024 by HACK Club | All Rights Reserved.</p>
+        </div>
+        <div class="footer-iconTop">
+            <a href="#home"><i class='bx bx-up-arrow-alt'></i></a>
+        </div>
+    </footer>
 
 </body>
 </html>

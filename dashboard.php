@@ -59,7 +59,7 @@ $myTeams = $myTeamsStmt->fetchAll();
     <meta name="description" content="HACK Club member dashboard — manage your events and profile.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="copyMyClub.css">
+    <link rel="stylesheet" href="myClub.css">
     <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="dashboard.css">

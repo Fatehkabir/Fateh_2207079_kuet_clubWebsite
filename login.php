@@ -11,7 +11,7 @@ if(isset($_SESSION['member_id'])){
 }
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
-    if(!isset($_POST[csrf_token]) || !verify_csrf_token($_POST['csrf_token'])){
+    if(!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])){
         $error='Invalid CSRF token';
     } else{
         $email=trim($_POST['email'] ?? '');

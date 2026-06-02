@@ -1,56 +1,51 @@
 <?php
-
 require_once 'auth.php';
 require_once 'db.php';
+// require_once 'team_helpers.php';
 requireAdmin();
 
-$adminCheck=$pdo->prepare("SELECT id from members where id = ? and role='admin'");
+$adminCheck = $pdo->prepare("SELECT id FROM members WHERE id = ? AND role = 'admin'");
 $adminCheck->execute([$_SESSION['member_id'] ?? 0]);
-if(!$adminCheck->fetch()){
-    header('Location:logout.php');
-    exit();
-}
+if (!$adminCheck->fetch()) { header('Location: logout.php'); exit(); }
 
-$activeTab=$_GET['tab'] ?? 'members';
+$activeTab = $_GET['tab'] ?? 'members';
 
-$members = $pdo->query("SELECT id, full_name, student_id, email, department, year, role, avatar, created_at, last_login FROM members ORDER BY created_at DESC")->fetchAll();
-$messages = $pdo->query("SELECT * FROM contact_messages ORDER BY sent_at DESC LIMIT 100")->fetchAll();
-$events = $pdo->query("SELECT e.*, (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) AS reg_count FROM events e ORDER BY e.event_date ASC")->fetchAll();
+$members       = $pdo->query("SELECT id, full_name, student_id, email, department, year, role, avatar, created_at, last_login FROM members ORDER BY created_at DESC")->fetchAll();
+$messages      = $pdo->query("SELECT cm.*, COALESCE(m.full_name, cm.name) AS display_name FROM contact_messages cm LEFT JOIN members m ON cm.email = m.email ORDER BY cm.sent_at DESC LIMIT 100")->fetchAll();
+$memberMsgs    = $pdo->query("SELECT mm.*, m.full_name, m.avatar, m.email, m.department FROM member_messages mm JOIN members m ON mm.member_id = m.id ORDER BY mm.sent_at DESC LIMIT 100")->fetchAll();
+$events        = $pdo->query("SELECT e.*, (SELECT COUNT(*) FROM event_registrations WHERE event_id = e.id) AS reg_count FROM events e ORDER BY e.event_date ASC")->fetchAll();
 $announcements = $pdo->query("SELECT a.*, m.full_name AS author_name FROM announcements a LEFT JOIN members m ON a.created_by = m.id ORDER BY a.created_at DESC")->fetchAll();
-$teams = $pdo->query("SELECT t.*, m.full_name AS creator_name, (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count FROM teams t LEFT JOIN members m ON t.created_by = m.id ORDER BY t.created_at DESC")->fetchAll();
-$allMembers = $pdo->query("SELECT id, full_name, avatar, department FROM members ORDER BY full_name ASC")->fetchAll();
-
+$teams         = $pdo->query("SELECT t.*, m.full_name AS creator_name, (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) AS member_count FROM teams t LEFT JOIN members m ON t.created_by = m.id ORDER BY t.created_at DESC")->fetchAll();
+$allMembers    = $pdo->query("SELECT id, full_name, avatar, department FROM members ORDER BY full_name ASC")->fetchAll();
+$allTeams      = $pdo->query("SELECT id, name FROM teams ORDER BY name ASC")->fetchAll();
+$unreadMsgs    = $pdo->query("SELECT COUNT(*) FROM member_messages WHERE is_read = 0")->fetchColumn();
 
 $stats = [
     'members'  => $pdo->query("SELECT COUNT(*) FROM members")->fetchColumn(),
-    'messages' => $pdo->query("SELECT COUNT(*) FROM contact_messages")->fetchColumn(),
+    'messages' => $pdo->query("SELECT COUNT(*) FROM contact_messages")->fetchColumn() + $pdo->query("SELECT COUNT(*) FROM member_messages")->fetchColumn(),
     'events'   => $pdo->query("SELECT COUNT(*) FROM events")->fetchColumn(),
     'regs'     => $pdo->query("SELECT COUNT(*) FROM event_registrations")->fetchColumn(),
     'anncs'    => $pdo->query("SELECT COUNT(*) FROM announcements")->fetchColumn(),
     'teams'    => $pdo->query("SELECT COUNT(*) FROM teams")->fetchColumn(),
 ];
 
-if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])){
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
-    $action=$_POST['action'];
+    $action = $_POST['action'];
 
-    if($action==='toggle_role'){
-        $mid=intval($_POST['member_id']);
-        if($mid !== $_SESSION['member_id'] ){
-            $pdo->prepare("UPDATE members SET role = if(role='admin','member','admin') where id = ?")->execute([$mid]);
-            echo json_encode(['success'=>true]);
-        } else{
-            echo json_encode(['success'=>false, 'message'=>'You cannot change your own role.']);
-        }
+    if ($action === 'toggle_role') {
+        $mid = intval($_POST['member_id']);
+        if ($mid !== $_SESSION['member_id']) {
+            $pdo->prepare("UPDATE members SET role = IF(role='admin','member','admin') WHERE id = ?")->execute([$mid]);
+            echo json_encode(['success' => true]);
+        } else { echo json_encode(['success' => false, 'message' => "You can't change your own role."]); }
 
-    } elseif($action==='delete_member'){
-        $mid=intval($_POST['member_id']);
-        if($mid != $_SESSION['member_id']){
+    } elseif ($action === 'delete_member') {
+        $mid = intval($_POST['member_id']);
+        if ($mid !== $_SESSION['member_id']) {
             $pdo->prepare("DELETE FROM members WHERE id = ?")->execute([$mid]);
-            echo json_encode(['success'=>true]);
-        } else{
-            echo json_encode(['success'=>false, 'message'=>'You cannot delete your own account.']);
-        }
+            echo json_encode(['success' => true]);
+        } else { echo json_encode(['success' => false, 'message' => "You can't delete yourself."]); }
 
     } elseif ($action === 'delete_message') {
         $msgId = intval($_POST['message_id']);
@@ -60,13 +55,11 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])){
     } elseif ($action === 'mark_read') {
         $msgId = intval($_POST['msg_id']);
         $pdo->prepare("UPDATE member_messages SET is_read = 1 WHERE id = ?")->execute([$msgId]);
-        echo json_encode(['success' => true]); 
-
+        echo json_encode(['success' => true]);
     } elseif ($action === 'delete_member_message') {
         $msgId = intval($_POST['msg_id']);
         $pdo->prepare("DELETE FROM member_messages WHERE id = ?")->execute([$msgId]);
         echo json_encode(['success' => true]);
-   
     } elseif ($action === 'mark_all_read') {
         $pdo->exec("UPDATE member_messages SET is_read = 1");
         echo json_encode(['success' => true]);
@@ -118,7 +111,6 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])){
             $teamMembers = $mStmt->fetchAll(PDO::FETCH_COLUMN);
             $teamSize = count($teamMembers);
 
-            
             $newRegistrations = registerTeamMembersForEvent($pdo, $eventId, $teamId);
 
             if ($isNewAssignment && $teamSize > 0) {
@@ -228,7 +220,6 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])){
                     exit();
                 }
 
-              
                 $joinedEvents = registerMemberForTeamEvents($pdo, $teamId, $memberId);
 
                 $m = $pdo->prepare("SELECT full_name,avatar FROM members WHERE id=?"); $m->execute([$memberId]);
@@ -261,14 +252,7 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action'])){
 
 $adminName   = explode(' ', $_SESSION['member_name'])[0];
 $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
-
-
-
-
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -282,13 +266,11 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
     <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
     <link rel="stylesheet" href="dashboard.css">
     <style>
-
-                .admin-page { padding: 110px 6% 80px; min-height: 100vh; }
+        .admin-page { padding: 110px 6% 80px; min-height: 100vh; }
         .admin-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:15px; }
         .admin-topbar h1 { font-size:2rem; font-weight:800; color:#fff; }
         .admin-topbar h1 span { color:#00f3ff; }
 
-        /* ── Stats Row ───────────────────────────────────────── */
         .admin-stats-row { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:30px; }
         .admin-stat-card { padding:20px 16px; border-radius:16px; background:rgba(10,15,25,0.7); border:1px solid rgba(0,243,255,0.12); display:flex; align-items:center; gap:12px; transition:0.3s; }
         .admin-stat-card:hover { border-color:rgba(0,243,255,0.4); transform:translateY(-2px); }
@@ -296,7 +278,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .asc-num   { font-size:1.7rem; font-weight:900; color:#fff; line-height:1; margin-bottom:2px; }
         .asc-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:1.5px; color:#64748b; font-weight:700; }
 
-        /* ── Tabs ────────────────────────────────────────────── */
         .tabs { display:flex; gap:4px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.07); flex-wrap:wrap; }
         .tab-btn { padding:11px 16px; border-radius:10px 10px 0 0; background:none; border:none; border-bottom:3px solid transparent; color:#64748b; font-size:0.82rem; font-weight:700; font-family:'Outfit',sans-serif; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s; letter-spacing:0.3px; text-transform:uppercase; position:relative; }
         .tab-btn:hover { color:#cbd5e1; }
@@ -305,7 +286,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .tab-content.active { display:block; }
         .tab-badge { background:#ff4d4d; color:#fff; border-radius:20px; padding:1px 7px; font-size:0.65rem; font-weight:900; position:absolute; top:6px; right:4px; }
 
-        /* ── Tables ──────────────────────────────────────────── */
         .admin-table-wrap { background:rgba(10,15,25,0.6); border:1px solid rgba(0,243,255,0.15); border-radius:20px; overflow:hidden; }
         .admin-table { width:100%; border-collapse:collapse; font-size:0.88rem; }
         .admin-table thead th { padding:14px 18px; text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:1.5px; color:#64748b; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.07); background:rgba(5,8,16,0.5); }
@@ -321,7 +301,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .role-admin  { background:rgba(0,243,255,0.12); color:#00f3ff; border:1px solid rgba(0,243,255,0.3); }
         .role-member { background:rgba(255,255,255,0.05); color:#64748b; border:1px solid rgba(255,255,255,0.1); }
 
-        /* ── Buttons ─────────────────────────────────────────── */
         .tbl-action-btn { padding:7px 13px; border-radius:8px; font-size:0.76rem; font-weight:700; font-family:'Outfit',sans-serif; cursor:pointer; border:1px solid; transition:0.2s; display:inline-flex; align-items:center; gap:5px; margin-right:4px; text-decoration:none; }
         .btn-toggle  { background:rgba(0,243,255,0.08);  color:#00f3ff;  border-color:rgba(0,243,255,0.3); }
         .btn-toggle:hover  { background:rgba(0,243,255,0.2); }
@@ -334,11 +313,9 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .btn-add-main { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; background:linear-gradient(135deg,#00f3ff,#2d72fc); color:white; font-weight:700; border-radius:12px; border:none; cursor:pointer; font-family:'Outfit',sans-serif; font-size:0.9rem; transition:0.3s; box-shadow:0 0 20px rgba(0,243,255,0.3); text-decoration:none; }
         .btn-add-main:hover { transform:translateY(-2px); box-shadow:0 0 30px rgba(0,243,255,0.5); }
 
-        /* ── Tab header row ──────────────────────────────────── */
         .tab-header-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
         .tab-header-row h2 { font-size:1.3rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:10px; }
 
-        /* ── Events Grid ─────────────────────────────────────── */
         .events-admin-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
         .ev-admin-card { padding:22px; border-radius:16px; background:rgba(10,15,25,0.6); border:1px solid rgba(0,243,255,0.15); transition:0.3s; }
         .ev-admin-card:hover { border-color:rgba(0,243,255,0.35); }
@@ -355,7 +332,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .ev-team-chip    { background:rgba(45,114,252,0.12); border:1px solid rgba(45,114,252,0.3); border-radius:20px; padding:3px 10px; font-size:0.72rem; font-weight:700; color:#7aa2f7; display:flex; align-items:center; gap:5px; }
         .ev-team-chip .rm-team { color:#ff6b6b; cursor:pointer; background:none; border:none; font-size:0.9rem; padding:0; margin-left:2px; line-height:1; }
 
-        /* ── Announcements ───────────────────────────────────── */
         .ann-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
         .ann-card { padding:22px; border-radius:16px; background:rgba(10,15,25,0.6); border:1px solid rgba(0,243,255,0.15); transition:0.3s; }
         .ann-card:hover { border-color:rgba(0,243,255,0.35); }
@@ -365,7 +341,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .ann-card-body   { color:#94a3b8; font-size:0.88rem; line-height:1.6; }
         .ann-badge       { background:rgba(0,243,255,0.08); color:#00f3ff; border:1px solid rgba(0,243,255,0.25); border-radius:20px; padding:2px 10px; font-size:0.7rem; font-weight:700; letter-spacing:0.5px; flex-shrink:0; }
 
-        /* ── Teams Grid ──────────────────────────────────────── */
         .teams-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
         .team-card { padding:22px; border-radius:16px; background:rgba(10,15,25,0.6); border:1px solid rgba(0,243,255,0.15); transition:0.3s; }
         .team-card:hover { border-color:rgba(0,243,255,0.35); }
@@ -377,7 +352,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .team-chip .remove-chip { color:#ff6b6b; cursor:pointer; font-size:1rem; line-height:1; background:none; border:none; padding:0; margin-left:2px; }
         .team-count-badge { background:rgba(255,255,255,0.06); color:#64748b; border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:2px 10px; font-size:0.7rem; font-weight:700; flex-shrink:0; }
 
-        /* ── Messages ────────────────────────────────────────── */
         .msg-cards { display:flex; flex-direction:column; gap:12px; }
         .msg-card { padding:18px 20px; border-radius:14px; background:rgba(10,15,25,0.6); border:1px solid rgba(255,255,255,0.08); transition:0.2s; }
         .msg-card.unread { border-color:rgba(0,243,255,0.25); background:rgba(0,243,255,0.03); }
@@ -392,7 +366,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .msg-meta { font-size:0.72rem; color:#475569; }
         .unread-dot { width:8px; height:8px; border-radius:50%; background:#00f3ff; display:inline-block; margin-right:6px; flex-shrink:0; }
 
-        /* ── Modal Overlay ───────────────────────────────────── */
         .modal-overlay { display:none; position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); align-items:center; justify-content:center; }
         .modal-overlay.open { display:flex; animation:fadeIn 0.2s ease; }
         .modal-box { background:rgba(10,15,25,0.98); border:1px solid rgba(0,243,255,0.25); border-radius:24px; padding:36px; max-width:540px; width:94%; box-shadow:0 25px 60px rgba(0,0,0,0.7); position:relative; max-height:90vh; overflow-y:auto; }
@@ -401,7 +374,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .modal-close { position:absolute; top:18px; right:18px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#64748b; border-radius:10px; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.2rem; transition:0.2s; }
         .modal-close:hover { color:#ff6b6b; border-color:rgba(255,77,77,0.4); }
 
-        /* ── Form Controls ───────────────────────────────────── */
         .form-group { margin-bottom:18px; }
         .form-group label { display:block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#64748b; margin-bottom:8px; }
         .form-group input, .form-group textarea, .form-group select { width:100%; padding:12px 16px; background:rgba(5,8,16,0.8); border:1px solid rgba(0,243,255,0.2); border-radius:12px; color:#fff; font-family:'Outfit',sans-serif; font-size:0.9rem; transition:0.2s; outline:none; box-sizing:border-box; }
@@ -415,7 +387,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .btn-submit-modal { padding:11px 28px; background:linear-gradient(135deg,#00f3ff,#2d72fc); border:none; color:white; border-radius:12px; cursor:pointer; font-family:'Outfit',sans-serif; font-size:0.9rem; font-weight:700; transition:0.2s; }
         .btn-submit-modal:hover { opacity:0.85; }
 
-        /* ── Toast ───────────────────────────────────────────── */
         .toast-admin { position:fixed; bottom:30px; right:30px; padding:14px 22px; border-radius:14px; font-size:0.9rem; font-weight:600; display:none; z-index:9999; animation:fadeIn 0.3s ease; max-width:340px; line-height:1.4; }
         .toast-admin.success { background:rgba(0,229,160,0.15); border:1px solid rgba(0,229,160,0.4); color:#00e5a0; }
         .toast-admin.error   { background:rgba(255,77,77,0.12);  border:1px solid rgba(255,77,77,0.4);  color:#ff8080; }
@@ -426,11 +397,9 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
         @media (max-width:1100px) { .admin-stats-row { grid-template-columns:repeat(3,1fr); } }
         @media (max-width:700px) { .admin-stats-row { grid-template-columns:repeat(2,1fr); } .form-row-2 { grid-template-columns:1fr; } }
-    
     </style>
-    </head>
-
-    <body>
+</head>
+<body>
     <div class="bg-grid"></div>
 
     <nav class="navbar">
@@ -458,7 +427,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </nav>
 
-        <div class="admin-page">
+    <div class="admin-page">
 
         <div class="admin-topbar">
             <h1>Admin <span>Panel</span></h1>
@@ -467,7 +436,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </a>
         </div>
 
-                <div class="admin-stats-row">
+        <div class="admin-stats-row">
             <div class="admin-stat-card">
                 <div class="asc-icon"><i class='bx bx-group'></i></div>
                 <div><div class="asc-num"><?= $stats['members'] ?></div><div class="asc-label">Members</div></div>
@@ -494,7 +463,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </div>
         </div>
 
-                <div class="tabs">
+        <div class="tabs">
             <button class="tab-btn <?= $activeTab==='members'       ?'active':'' ?>" onclick="switchTab('members')"><i class='bx bx-group'></i>Members</button>
             <button class="tab-btn <?= $activeTab==='events'        ?'active':'' ?>" onclick="switchTab('events')"><i class='bx bx-calendar'></i>Events</button>
             <button class="tab-btn <?= $activeTab==='announcements' ?'active':'' ?>" onclick="switchTab('announcements')"><i class='bx bx-megaphone'></i>Announcements</button>
@@ -508,7 +477,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             <button class="tab-btn <?= $activeTab==='contact'       ?'active':'' ?>" onclick="switchTab('contact')"><i class='bx bx-comment-detail'></i>Contact Msgs</button>
         </div>
 
-                <div id="tab-members" class="tab-content <?= $activeTab==='members'?'active':'' ?>">
+        <div id="tab-members" class="tab-content <?= $activeTab==='members'?'active':'' ?>">
             <div class="admin-table-wrap">
                 <table class="admin-table">
                     <thead><tr><th>Member</th><th>Student ID</th><th>Dept</th><th>Year</th><th>Role</th><th>Joined</th><th>Last Login</th><th>Actions</th></tr></thead>
@@ -537,7 +506,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
                             <?php else: ?>
                             <span style="color:#475569;font-size:0.8rem;">You</span>
                             <?php endif; ?>
-                        </td>
+                         </td>
                     </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -545,7 +514,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </div>
         </div>
 
-             <div id="tab-events" class="tab-content <?= $activeTab==='events'?'active':'' ?>">
+        <div id="tab-events" class="tab-content <?= $activeTab==='events'?'active':'' ?>">
             <div class="tab-header-row">
                 <h2><i class='bx bx-calendar' style="color:#00f3ff;"></i> Events</h2>
                 <button class="btn-add-main" onclick="openModal('modalAddEvent')"><i class='bx bx-plus'></i> Add Event</button>
@@ -570,7 +539,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
                 <div class="ev-admin-desc"><?= htmlspecialchars($ev['description']) ?></div>
                 <div class="ev-seats-bar"><div class="ev-seats-fill" id="ev-seats-fill-<?= $ev['id'] ?>" style="width:<?= $pct ?>%"></div></div>
                 <div class="ev-seats-label" id="ev-seats-label-<?= $ev['id'] ?>"><?= $ev['reg_count'] ?> / <?= $ev['seats'] ?> seats (<?= $pct ?>%)</div>
-                <!-- Teams assigned to this event -->
                 <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#475569;margin-bottom:6px;">Participating Teams</div>
                 <div class="ev-teams-row" id="ev-teams-<?= $ev['id'] ?>">
                     <?php foreach ($evTeams as $et): ?>
@@ -637,7 +605,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </div>
         </div>
 
-         <div id="tab-teams" class="tab-content <?= $activeTab==='teams'?'active':'' ?>">
+        <div id="tab-teams" class="tab-content <?= $activeTab==='teams'?'active':'' ?>">
             <div class="tab-header-row">
                 <h2><i class='bx bx-shield' style="color:#00f3ff;"></i> Teams</h2>
                 <button class="btn-add-main" onclick="openModal('modalAddTeam')"><i class='bx bx-plus'></i> New Team</button>
@@ -682,7 +650,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </div>
         </div>
 
- <div id="tab-messages" class="tab-content <?= $activeTab==='messages'?'active':'' ?>">
+        <div id="tab-messages" class="tab-content <?= $activeTab==='messages'?'active':'' ?>">
             <div class="tab-header-row">
                 <h2><i class='bx bx-envelope' style="color:#00f3ff;"></i> Member Inbox
                     <?php if ($unreadMsgs > 0): ?>
@@ -775,7 +743,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-  
     <div class="modal-overlay" id="modalEditEvent">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalEditEvent')"><i class='bx bx-x'></i></button>
@@ -801,7 +768,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-   
     <div class="modal-overlay" id="modalAssignTeam">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalAssignTeam')"><i class='bx bx-x'></i></button>
@@ -823,7 +789,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-  
     <div class="modal-overlay" id="modalAddAnn">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalAddAnn')"><i class='bx bx-x'></i></button>
@@ -838,7 +803,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             </form>
         </div>
     </div>
-
 
     <div class="modal-overlay" id="modalEditAnn">
         <div class="modal-box">
@@ -856,7 +820,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-
     <div class="modal-overlay" id="modalAddTeam">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalAddTeam')"><i class='bx bx-x'></i></button>
@@ -872,7 +835,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-    
     <div class="modal-overlay" id="modalEditTeam">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalEditTeam')"><i class='bx bx-x'></i></button>
@@ -889,7 +851,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         </div>
     </div>
 
-  
     <div class="modal-overlay" id="modalAddTeamMember">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal('modalAddTeamMember')"><i class='bx bx-x'></i></button>
@@ -914,7 +875,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
     <div id="adminToast" class="toast-admin"></div>
 
     <script>
-   
     function openModal(id)  { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
     document.querySelectorAll('.modal-overlay').forEach(o => {
@@ -930,14 +890,12 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         });
     }
 
-
     function toggleUserDropdown() { document.getElementById('userDropdown').classList.toggle('show'); }
     document.addEventListener('click', e => {
         const btn = document.getElementById('navAvatarBtn');
         const dd  = document.getElementById('userDropdown');
         if (btn && !btn.contains(e.target)) dd.classList.remove('show');
     });
-
 
     function showAdminToast(msg, type) {
         const t = document.getElementById('adminToast');
@@ -962,7 +920,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         .catch(() => showAdminToast('❌ Network error.', 'error'));
     }
 
-
     function toggleRole(memberId) {
         adminAction({ action: 'toggle_role', member_id: memberId }, function() {
             const badge = document.getElementById('role-badge-' + memberId);
@@ -980,7 +937,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             if (row) row.remove();
         });
     }
-
 
     document.getElementById('formAddEvent').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1043,7 +999,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         if (label) label.textContent = regCount + ' / ' + seats + ' seats (' + pct + '%)';
     }
 
-
     function openAssignTeam(eventId, eventName) {
         document.getElementById('at_eventId').value = eventId;
         document.getElementById('at_eventName').textContent = eventName;
@@ -1085,7 +1040,7 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
         });
     }
 
-  
+    document.getElementById('formAddAnn').addEventListener('submit', function(e) {
         e.preventDefault();
         adminAction({
             action:  'add_announcement',
@@ -1121,7 +1076,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             if (card) card.remove();
         });
     }
-
 
     document.getElementById('formAddTeam').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1236,7 +1190,6 @@ $adminAvatar = $_SESSION['member_avatar'] ?? '⚙️';
             if (card) card.remove();
         });
     }
-
 
     function deleteMessage(msgId) {
         adminAction({ action: 'delete_message', message_id: msgId }, function() {

@@ -8,7 +8,7 @@ if ($eventId <= 0) {
     die('Invalid event ID');
 }
 
-// Fetch existing data
+
 $stmt = $pdo->prepare("SELECT * FROM events WHERE id = ?");
 $stmt->execute([$eventId]);
 $event = $stmt->fetch();
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $error = 'Please fill all required fields.';
     }
-    // Refresh $event after update for display
+    
     $stmt->execute([$eventId]);
     $event = $stmt->fetch();
 }

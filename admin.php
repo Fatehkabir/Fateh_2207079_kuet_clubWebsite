@@ -1,7 +1,7 @@
 <?php
 require_once 'auth.php';
 require_once 'db.php';
-// require_once 'team_helpers.php';
+require_once 'team_helpers.php';
 requireAdmin();
 
 $adminCheck = $pdo->prepare("SELECT id FROM members WHERE id = ? AND role = 'admin'");

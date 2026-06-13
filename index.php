@@ -287,8 +287,6 @@ $statTeams   = $pdo->query("SELECT COUNT(*) FROM teams")->fetchColumn();
                             <p style="color: #64748b; font-size: 0.85rem; line-height: 1.5; margin-bottom: 10px;"><?= htmlspecialchars($ev['description']) ?></p>
                         </div>
                     </div>
-                    
-                    <!-- Display Participating Teams dynamically -->
                     <?php if (!empty($ev['teams'])): ?>
                     <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px;">
                         <div style="font-size: 0.68rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Participating Teams</div>

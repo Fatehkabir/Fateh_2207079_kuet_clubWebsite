@@ -35,7 +35,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
         if($stmt->rowCount()>0){
             $error='An account with this email or student ID already exists.';
         } else{
-            $hash=password_hash($password,PASSWORD_BCCRYPT);
+            $hash=password_hash($password,PASSWORD_BCRYPT);
             $avatars=['👨‍💻', '👩‍💻', '🧑‍🔧', '👨‍🔬', '👩‍🔬', '🤖', '⚙️', '🔌'];
             $avatar=$avatars[array_rand($avatars)];
             $stmt=$pdo->prepare("INSERT INTO members (full_name,student_id,email,password,department,year,avatar) VALUES (?,?,?,?,?,?,?)");
